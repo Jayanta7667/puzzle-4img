@@ -20,7 +20,7 @@ body{
 }
 
 .title{
-  font-size:48px;
+  font-size:50px;
   color:#d4ff00;
 }
 
@@ -31,8 +31,8 @@ body{
 
 #startBtn{
   margin-top:30px;
-  padding:20px 70px;
-  font-size:22px;
+  padding:20px 80px;
+  font-size:24px;
   background:#d4ff00;
   border:3px solid black;
   cursor:pointer;
@@ -61,30 +61,41 @@ body{
 #score{
   color:#d4ff00;
 }
-</style></head><body><!-- HOME --><div id="home">
+</style></head><body><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
   <div class="owner">Owner: Jayanta (JD)</div>
   <button id="startBtn" onclick="startGame()">START</button>
-</div><!-- GAME --><div id="game">
+</div><div id="game">
   <h2>Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
   <div id="score">Best: 0s</div>
   <div id="board"></div>
-</div><!-- LOCAL SOUND (upload these 2 files) --><audio id="clickSound" src="click.mp3"></audio>
-<audio id="winSound" src="win.mp3"></audio>
+</div><!-- SOUND (no upload needed) --><audio id="clickSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_7f6b0a4c42.mp3?filename=click-124467.mp3"></audio>
+<audio id="winSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5c3b1c7e9c.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
 let tiles=[];
 let time=0;
 let timer;
-
 let image="img1.jpg";
 
-/* SOUND UNLOCK (IMPORTANT) */
+/* unlock sound */
 document.body.addEventListener("click", ()=>{
   let s=document.getElementById("clickSound");
   s.play().then(()=>s.pause()).catch(()=>{});
 },{once:true});
+
+function playClick(){
+  let s=document.getElementById("clickSound");
+  s.currentTime=0;
+  s.play().catch(()=>{});
+}
+
+function playWin(){
+  let w=document.getElementById("winSound");
+  w.currentTime=0;
+  w.play().catch(()=>{});
+}
 
 function startGame(){
   document.getElementById("home").style.display="none";
@@ -140,9 +151,7 @@ function move(i){
   let valid=[e1-1,e1+1,e1-4,e1+4,e2-1,e2+1,e2-4,e2+4];
 
   if(valid.includes(i)){
-    let s=document.getElementById("clickSound");
-    s.currentTime=0;
-    s.play().catch(()=>{});
+    playClick();
 
     if(Math.abs(i-e1)<=4){
       [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
@@ -159,9 +168,7 @@ function checkWin(){
   if(tiles.slice(0,10).toString()=="0,1,2,3,4,5,6,7,8,9"){
     clearInterval(timer);
 
-    let w=document.getElementById("winSound");
-    w.currentTime=0;
-    w.play().catch(()=>{});
+    playWin();
 
     let best=localStorage.getItem("best")||9999;
     if(time<best){
