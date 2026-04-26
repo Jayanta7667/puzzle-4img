@@ -7,6 +7,7 @@
       text-align: center;
       font-family: Arial;
     }
+
     #board {
       display: grid;
       grid-template-columns: repeat(2, 150px);
@@ -14,26 +15,30 @@
       justify-content: center;
       margin-top: 20px;
     }
+
     .tile {
       width: 150px;
       height: 150px;
       border: 2px solid black;
-      background-size: 300px 300px;
+      background-size: cover;
+      background-position: center;
     }
   </style>
 </head>
+
 <body>
 
-<h2>Puzzle Game (2x2)</h2>
-
+<h2>4 Image Puzzle (2x2)</h2>
 <div id="board"></div>
 
 <script>
 let size = 2;
 let tiles = [0,1,2,3];
 
-let image = "img1.jpg";
+// images
+let images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"];
 
+// shuffle
 tiles.sort(() => Math.random() - 0.5);
 
 function render() {
@@ -45,10 +50,7 @@ function render() {
     div.className = "tile";
 
     if (val !== size*size-1) {
-      let x = (val % size) * 150;
-      let y = Math.floor(val / size) * 150;
-      div.style.backgroundImage = `url(${image})`;
-      div.style.backgroundPosition = `-${x}px -${y}px`;
+      div.style.backgroundImage = `url(${images[val % 4]})`;
     } else {
       div.style.background = "#fff";
     }
