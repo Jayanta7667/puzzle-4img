@@ -10,6 +10,8 @@ body{
   font-family:Arial;
 }
 
+.title{font-size:40px;color:#d4ff00;}
+
 #home{
   height:100vh;
   display:flex;
@@ -18,13 +20,12 @@ body{
   align-items:center;
 }
 
-.title{font-size:45px;color:#d4ff00;}
-
 .btn{
   margin:6px;
   padding:12px 25px;
   background:#d4ff00;
   border:2px solid black;
+  cursor:pointer;
 }
 
 /* image select */
@@ -35,7 +36,6 @@ body{
   border:2px solid white;
   cursor:pointer;
 }
-
 #imgList img.selected{
   border:3px solid #d4ff00;
 }
@@ -63,73 +63,88 @@ body{
   height:90px;
   border:1px solid #333;
 }
-</style></head><body><div id="home">
+</style></head><body><!-- HOME --><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
-  <p>Owner: Jayanta (JD)</p>  <!-- 🔥 IMAGE SELECT -->  <div id="imgList">
+  <p>Owner: Jayanta (JD)</p>  <!-- image select -->  <div id="imgList">
     <img src="img1.jpg" onclick="selectImage(this)">
     <img src="img2.jpg" onclick="selectImage(this)">
     <img src="img3.jpg" onclick="selectImage(this)">
     <img src="img4.jpg" onclick="selectImage(this)">
-  </div>  <br>  <!-- upload optional --><input type="file" id="imgInput" accept="image/*"><br><br>
+  </div>  <br>  <!-- upload --><input type="file" id="imgInput" accept="image/*"><br><br>
 
-  <!-- grid select --><button class="btn" onclick="startGame(6)">6</button>
-<button class="btn" onclick="startGame(9)">9</button>
-<button class="btn" onclick="startGame(12)">12</button>
-<button class="btn" onclick="startGame(20)">20</button>
+  <!-- grid select -->  <div>
+    <button class="btn" onclick="setGrid(event,6)">6</button>
+    <button class="btn" onclick="setGrid(event,9)">9</button>
+    <button class="btn" onclick="setGrid(event,12)">12</button>
+    <button class="btn" onclick="setGrid(event,20)">20</button>
+  </div>  <br>  <!-- START --><button class="btn" onclick="startGame()">START GAME</button>
 
-</div><div id="game">
+</div><!-- GAME --><div id="game">
   <h2 id="lvl"></h2>
   <h3>Time: <span id="time">0</span>s</h3>  <div id="preview"></div>
   <div id="board"></div>  <br>
-  <button class="btn" onclick="goHome()">BACK</button>
+  <button class="btn" onclick="location.reload()">BACK</button>
 </div><script>
 // 🔊 SOUND
 let ctx=new (window.AudioContext||window.webkitAudioContext)();
 
-function playSound(freq=500,duration=0.1){
+function sound(freq=500,time=0.1){
  let o=ctx.createOscillator();
  let g=ctx.createGain();
  o.connect(g); g.connect(ctx.destination);
  o.frequency.value=freq;
  o.start();
- g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
- o.stop(ctx.currentTime+duration);
+ g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+time);
+ o.stop(ctx.currentTime+time);
 }
 
 document.body.addEventListener("click",()=>{
  if(ctx.state==="suspended") ctx.resume();
 },{once:true});
 
-// ===== IMAGE SELECT =====
+// ===== STATE =====
+let total=0;
 let imageSrc="img1.jpg";
+let tiles=[];
+let timer,time=0;
 
+// image select
 function selectImage(el){
  document.querySelectorAll("#imgList img").forEach(img=>{
   img.classList.remove("selected");
  });
-
  el.classList.add("selected");
  imageSrc=el.src;
 }
 
-// ===== GAME =====
-let total=6;
-let tiles=[];
-let timer,time=0;
-
-function startGame(size){
+// grid select
+function setGrid(e,size){
  total=size;
 
- // upload override
+ document.querySelectorAll(".btn").forEach(btn=>{
+   btn.style.border="2px solid black";
+ });
+
+ e.target.style.border="3px solid red";
+}
+
+// start game
+function startGame(){
+
  let file=document.getElementById("imgInput").files[0];
  if(file){
    imageSrc=URL.createObjectURL(file);
  }
 
+ if(total===0){
+   alert("Select grid first!");
+   return;
+ }
+
  document.getElementById("home").style.display="none";
  document.getElementById("game").style.display="block";
 
- document.getElementById("lvl").innerText=size+" BOX MODE";
+ document.getElementById("lvl").innerText=total+" BOX MODE";
 
  document.getElementById("preview").style.backgroundImage=
  `url(${imageSrc})`;
@@ -147,10 +162,7 @@ function startGame(size){
  render();
 }
 
-function goHome(){
- location.reload();
-}
-
+// timer
 function startTimer(){
  clearInterval(timer);
  time=0;
@@ -160,20 +172,21 @@ function startTimer(){
  },1000);
 }
 
+// render
 function render(){
  let board=document.getElementById("board");
  board.innerHTML="";
 
- let emptyVal = total-1;
+ let empty=total-1;
  let cols=Math.ceil(Math.sqrt(total));
 
  tiles.forEach((val,i)=>{
   let div=document.createElement("div");
   div.className="tile";
 
-  if(val !== emptyVal){
-    let x=(val % cols)*90;
-    let y=Math.floor(val / cols)*90;
+  if(val!==empty){
+    let x=(val%cols)*90;
+    let y=Math.floor(val/cols)*90;
 
     div.style.backgroundImage=`url(${imageSrc})`;
     div.style.backgroundPosition=`-${x}px -${y}px`;
@@ -187,39 +200,34 @@ function render(){
  });
 }
 
+// move
 function move(i){
  let empty=tiles.indexOf(total-1);
  let cols=Math.ceil(Math.sqrt(total));
 
- let valid=[
-   empty-1, empty+1,
-   empty-cols, empty+cols
- ];
+ let valid=[empty-1,empty+1,empty-cols,empty+cols];
 
  if(valid.includes(i)){
-  playSound(500,0.1);
-
+  sound(500,0.1);
   [tiles[i],tiles[empty]]=[tiles[empty],tiles[i]];
   render();
   checkWin();
  }
 }
 
+// win
 function checkWin(){
  let win=true;
  for(let i=0;i<total;i++){
-  if(tiles[i]!==i){
-    win=false;
-    break;
-  }
+  if(tiles[i]!==i){ win=false; break; }
  }
 
  if(win){
   clearInterval(timer);
-  playSound(900,0.3);
+  sound(900,0.3);
 
   setTimeout(()=>{
-    alert("🎉 Completed in "+time+"s");
+    alert("Completed in "+time+"s");
     location.reload();
   },300);
  }
