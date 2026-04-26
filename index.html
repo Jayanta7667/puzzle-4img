@@ -1,82 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>4 Image Puzzle</title>
+  <title>4 Image Puzzle Game</title>
   <style>
-    body {
-      text-align: center;
-      font-family: Arial;
-    }
+    body { text-align:center; font-family:Arial; }
 
     #board {
-      display: grid;
-      grid-template-columns: repeat(2, 150px);
-      gap: 5px;
-      justify-content: center;
-      margin-top: 20px;
+      display:grid;
+      grid-template-columns:repeat(2,150px);
+      gap:5px;
+      justify-content:center;
+      margin-top:20px;
     }
 
     .tile {
-      width: 150px;
-      height: 150px;
-      border: 2px solid black;
-      background-size: cover;
-      background-position: center;
+      width:150px;
+      height:150px;
+      border:2px solid black;
+      background-size:300px 300px;
+    }
+
+    #game { display:none; }
+
+    button {
+      padding:15px 30px;
+      font-size:20px;
+      margin-top:50px;
+      cursor:pointer;
     }
   </style>
 </head>
 
 <body>
 
-<h2>4 Image Puzzle (2x2)</h2>
-<div id="board"></div>
+<!-- HOME -->
+<div id="home">
+  <h1>4 Image Puzzle Game</h1>
+  <button onclick="startGame()">START</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <h2 id="levelText">Level 1</h2>
+  <h3>Time: <span id="time">0</span>s</h3>
+  <div id="board"></div>
+</div>
 
 <script>
-let size = 2;
 let tiles = [0,1,2,3];
+let level = 1;
+let time = 0;
+let timer;
 
-// images
-let images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg"];
+let images = ["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
 
-// shuffle
-tiles.sort(() => Math.random() - 0.5);
+function startGame(){
+  document.getElementById("home").style.display="none";
+  document.getElementById("game").style.display="block";
+  loadLevel();
+}
 
-function render() {
+function startTimer(){
+  time = 0;
+  document.getElementById("time").innerText = 0;
+
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    time++;
+    document.getElementById("time").innerText = time;
+  },1000);
+}
+
+function loadLevel(){
+  document.getElementById("levelText").innerText = "Level " + level;
+  tiles = [0,1,2,3];
+  tiles.sort(()=>Math.random()-0.5);
+
+  startTimer();
+  render();
+}
+
+function render(){
   let board = document.getElementById("board");
-  board.innerHTML = "";
+  board.innerHTML="";
 
-  tiles.forEach((val, i) => {
+  tiles.forEach((val,i)=>{
     let div = document.createElement("div");
-    div.className = "tile";
+    div.className="tile";
 
-    if (val !== size*size-1) {
-      div.style.backgroundImage = `url(${images[val % 4]})`;
+    if(val !== 3){
+      let x=(val%2)*150;
+      let y=Math.floor(val/2)*150;
+
+      div.style.backgroundImage = `url(${images[level-1]})`;
+      div.style.backgroundPosition = `-${x}px -${y}px`;
     } else {
-      div.style.background = "#fff";
+      div.style.background="#fff";
     }
 
-    div.onclick = () => move(i);
+    div.onclick = ()=>move(i);
     board.appendChild(div);
   });
 }
 
-function move(i) {
-  let empty = tiles.indexOf(size*size-1);
+function move(i){
+  let empty = tiles.indexOf(3);
+  let valid = [empty-1,empty+1,empty-2,empty+2];
 
-  let valid = [
-    empty-1,
-    empty+1,
-    empty-size,
-    empty+size
-  ];
-
-  if (valid.includes(i)) {
-    [tiles[i], tiles[empty]] = [tiles[empty], tiles[i]];
+  if(valid.includes(i)){
+    [tiles[i],tiles[empty]]=[tiles[empty],tiles[i]];
     render();
+    checkWin();
   }
 }
 
-render();
+function checkWin(){
+  if(tiles.toString()==="0,1,2,3"){
+    clearInterval(timer);
+
+    setTimeout(()=>{
+      if(level < 4){
+        alert("Level "+level+" Complete! Time: "+time+"s");
+        level++;
+        loadLevel();
+      } else {
+        alert("🎉 Game Completed!");
+        location.reload();
+      }
+    },300);
+  }
+}
 </script>
 
 </body>
