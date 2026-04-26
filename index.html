@@ -58,35 +58,32 @@ body{
   background-size:360px 270px;
 }
 
-/* score */
 #score{
-  margin-top:10px;
   color:#d4ff00;
 }
-</style></head><body><div id="home">
+</style></head><body><!-- HOME --><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
   <div class="owner">Owner: Jayanta (JD)</div>
   <button id="startBtn" onclick="startGame()">START</button>
-</div><div id="game">
+</div><!-- GAME --><div id="game">
   <h2>Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
   <div id="score">Best: 0s</div>
   <div id="board"></div>
-</div><audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
-<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+</div><!-- LOCAL SOUND (upload these 2 files) --><audio id="clickSound" src="click.mp3"></audio>
+<audio id="winSound" src="win.mp3"></audio>
 
 <script>
 let tiles=[];
 let time=0;
 let timer;
 
-let images=["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
-let currentImage=0;
+let image="img1.jpg";
 
-/* unlock sound */
+/* SOUND UNLOCK (IMPORTANT) */
 document.body.addEventListener("click", ()=>{
-  let a=document.getElementById("clickSound");
-  a.play().then(()=>a.pause());
+  let s=document.getElementById("clickSound");
+  s.play().then(()=>s.pause()).catch(()=>{});
 },{once:true});
 
 function startGame(){
@@ -121,11 +118,11 @@ function render(){
     let div=document.createElement("div");
     div.className="tile";
 
-    if(val<10){ // 10 pieces
+    if(val<10){
       let x=(val%4)*90;
       let y=Math.floor(val/4)*90;
 
-      div.style.backgroundImage=`url(${images[currentImage]})`;
+      div.style.backgroundImage=`url(${image})`;
       div.style.backgroundPosition=`-${x}px -${y}px`;
     }else{
       div.style.background="#000";
