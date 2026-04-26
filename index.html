@@ -21,8 +21,8 @@ body{
 .title{font-size:45px;color:#d4ff00;}
 
 .btn{
-  margin:10px;
-  padding:15px 40px;
+  margin:8px;
+  padding:15px 35px;
   font-size:18px;
   background:#d4ff00;
   border:2px solid black;
@@ -36,6 +36,7 @@ body{
   margin:auto;
   border:3px solid #d4ff00;
   background-size:cover;
+  background-position:center;
 }
 
 #board{
@@ -49,14 +50,15 @@ body{
   width:90px;
   height:90px;
   border:1px solid #333;
-  background-size:300px 300px;
 }
 </style></head><body><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
-  <p>Owner: Jayanta (JD)</p><button class="btn" onclick="startGame(6)">6 BOX</button>
+  <p>Owner: Jayanta (JD)</p>  <!-- image select --><input type="file" id="imgInput" accept="image/*"><br><br>
+
+<button class="btn" onclick="startGame(6)">6 BOX</button>
 <button class="btn" onclick="startGame(9)">9 BOX</button>
 <button class="btn" onclick="startGame(12)">12 BOX</button>
-<button class="btn" onclick="startGame(18)">18 BOX</button>
+<button class="btn" onclick="startGame(20)">20 BOX</button>
 
 </div><div id="game">
   <h2 id="lvl"></h2>
@@ -85,15 +87,16 @@ document.body.addEventListener("click",()=>{
 let total=6;
 let tiles=[];
 let timer,time=0;
-
-let images=["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
-let currentImage="img1.jpg";
+let imageSrc="img1.jpg";
 
 function startGame(size){
  total=size;
 
- // random image
- currentImage=images[Math.floor(Math.random()*images.length)];
+ // image select
+ let file=document.getElementById("imgInput").files[0];
+ if(file){
+   imageSrc=URL.createObjectURL(file);
+ }
 
  document.getElementById("home").style.display="none";
  document.getElementById("game").style.display="block";
@@ -101,7 +104,7 @@ function startGame(size){
  document.getElementById("lvl").innerText=size+" BOX MODE";
 
  document.getElementById("preview").style.backgroundImage=
- `url(${currentImage})`;
+ `url(${imageSrc})`;
 
  tiles=[];
  for(let i=0;i<total;i++) tiles.push(i);
@@ -144,8 +147,9 @@ function render(){
     let x=(val % cols)*90;
     let y=Math.floor(val / cols)*90;
 
-    div.style.backgroundImage=`url(${currentImage})`;
+    div.style.backgroundImage=`url(${imageSrc})`;
     div.style.backgroundPosition=`-${x}px -${y}px`;
+    div.style.backgroundSize=`${cols*90}px ${cols*90}px`;
   }else{
     div.style.background="#000";
   }
