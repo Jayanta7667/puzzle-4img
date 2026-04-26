@@ -29,6 +29,16 @@ body{
 
 #game{display:none;}
 
+#preview{
+  width:200px;
+  height:200px;
+  margin:auto;
+  margin-top:10px;
+  border:3px solid #d4ff00;
+  background-size:cover;
+  background-position:center;
+}
+
 #board{
   display:grid;
   gap:4px;
@@ -37,8 +47,8 @@ body{
 }
 
 .tile{
-  width:100px;
-  height:100px;
+  width:90px;
+  height:90px;
   border:1px solid #333;
   background-size:300px 300px;
 }
@@ -48,19 +58,19 @@ body{
   <button id="startBtn" onclick="startGame()">START</button>
 </div><div id="game">
   <h2 id="lvl"></h2>
-  <h3>Time: <span id="time">0</span>s</h3>
-  <div id="board"></div>
+  <h3>Time: <span id="time">0</span>s</h3>  <!-- 🔥 IMAGE PREVIEW -->  <div id="preview"></div>  <div id="board"></div>
 </div><script>
 // 🔊 SOUND
 let ctx=new (window.AudioContext||window.webkitAudioContext)();
-function sound(f,t){
-  let o=ctx.createOscillator();
-  let g=ctx.createGain();
-  o.connect(g); g.connect(ctx.destination);
-  o.frequency.value=f;
-  o.start();
-  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t);
-  o.stop(ctx.currentTime+t);
+
+function playSound(freq=500,duration=0.1){
+ let o=ctx.createOscillator();
+ let g=ctx.createGain();
+ o.connect(g); g.connect(ctx.destination);
+ o.frequency.value=freq;
+ o.start();
+ g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
+ o.stop(ctx.currentTime+duration);
 }
 
 document.body.addEventListener("click",()=>{
@@ -69,7 +79,7 @@ document.body.addEventListener("click",()=>{
 
 // ===== GAME =====
 let level=1;
-let sizes=[4,6,8,12];
+let sizes=[6,9,12,18];
 let tiles=[];
 let timer,time=0;
 
@@ -85,6 +95,10 @@ function loadLevel(){
  let total=sizes[level-1];
  document.getElementById("lvl").innerText="Level "+level;
 
+ // 🔥 preview image set
+ document.getElementById("preview").style.backgroundImage =
+ `url(${images[level-1]})`;
+
  tiles=[];
  for(let i=0;i<total;i++) tiles.push(i);
 
@@ -92,7 +106,7 @@ function loadLevel(){
 
  let cols=Math.ceil(Math.sqrt(total));
  document.getElementById("board").style.gridTemplateColumns=
- `repeat(${cols},100px)`;
+ `repeat(${cols},90px)`;
 
  startTimer();
  render();
@@ -112,16 +126,17 @@ function render(){
  board.innerHTML="";
 
  let total=sizes[level-1];
- let emptyIndex = total-1;
+ let emptyVal = total-1;
+
+ let cols=Math.ceil(Math.sqrt(total));
 
  tiles.forEach((val,i)=>{
   let div=document.createElement("div");
   div.className="tile";
 
-  if(val !== emptyIndex){
-    let cols=Math.ceil(Math.sqrt(total));
-    let x=(val % cols)*100;
-    let y=Math.floor(val / cols)*100;
+  if(val !== emptyVal){
+    let x=(val % cols)*90;
+    let y=Math.floor(val / cols)*90;
 
     div.style.backgroundImage=`url(${images[level-1]})`;
     div.style.backgroundPosition=`-${x}px -${y}px`;
@@ -146,8 +161,10 @@ function move(i){
  ];
 
  if(valid.includes(i)){
-  sound(500,0.1);
+  playSound(500,0.1);
+
   [tiles[i],tiles[empty]]=[tiles[empty],tiles[i]];
+
   render();
   checkWin();
  }
@@ -166,7 +183,7 @@ function checkWin(){
 
  if(win){
   clearInterval(timer);
-  sound(900,0.4);
+  playSound(900,0.3);
 
   setTimeout(()=>{
    if(level<4){
