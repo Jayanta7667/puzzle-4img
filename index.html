@@ -1,65 +1,84 @@
 <!DOCTYPE html><html>
 <head>
-<title>4 Image Puzzle Game</title>
-<style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concrete Puzzle</title><style>
 body{
   margin:0;
   font-family:Arial;
+  background:#ececec;
   text-align:center;
-  background:#f5f5f5;
-}/* HOME SCREEN */
+}
+
+/* HOME SCREEN */
 #home{
-height:100vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
-button{
-padding:15px 30px;
-font-size:18px;
-background:#d4ff00;
-border:2px solid black;
-cursor:pointer;
+.title{
+  font-size:50px;
+  font-weight:bold;
+  letter-spacing:2px;
 }
 
-/* GAME SCREEN */
+.sub{
+  font-size:14px;
+  color:#666;
+  margin-bottom:20px;
+}
+
+#startBtn{
+  padding:22px 70px;
+  font-size:22px;
+  background:#d4ff00;
+  border:3px solid black;
+  cursor:pointer;
+  box-shadow:6px 6px 0px black;
+}
+
+/* GAME */
 #game{
-display:none;
+  display:none;
 }
 
 #board{
-display:grid;
-grid-template-columns:repeat(2,150px);
-gap:5px;
-justify-content:center;
-margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(3,130px);
+  gap:6px;
+  justify-content:center;
+  margin-top:20px;
 }
 
 .tile{
-width:150px;
-height:150px;
-border:2px solid black;
-background-size:300px 300px;
+  width:130px;
+  height:130px;
+  border:2px solid black;
+  background-size:390px 390px;
 }
-</style>
 
-</head><body><!-- HOME --><div id="home">
-  <h1>🧩 Puzzle Game</h1>
-  <button onclick="startGame()">START GAME</button>
+/* INFO */
+h2{
+  margin-top:10px;
+}
+</style></head><body><!-- HOME --><div id="home">
+  <div class="title">CONCRETE PUZZLE</div>
+  <div class="sub">3x3 Sliding Challenge</div>
+  <button id="startBtn" onclick="startGame()">START GAME</button>
 </div><!-- GAME --><div id="game">
   <h2 id="levelText">Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
   <div id="board"></div>
 </div><script>
 let level = 1;
-let size = 2;
-let tiles = [0,1,2,3];
+let size = 3;
+let tiles = [];
 let time = 0;
 let timer;
 
-// 4 images
+// 4 images use korbe
 let images = ["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
 
 function startGame(){
@@ -82,7 +101,9 @@ function startTimer(){
 function loadLevel(){
   document.getElementById("levelText").innerText = "Level " + level;
 
-  tiles = [0,1,2,3];
+  tiles = [];
+  for(let i=0;i<9;i++) tiles.push(i);
+
   tiles.sort(()=>Math.random()-0.5);
 
   startTimer();
@@ -97,9 +118,9 @@ function render(){
     let div = document.createElement("div");
     div.className="tile";
 
-    if(val!==3){
-      let x = (val % 2)*150;
-      let y = Math.floor(val/2)*150;
+    if(val !== 8){
+      let x = (val % 3)*130;
+      let y = Math.floor(val/3)*130;
 
       div.style.backgroundImage = `url(${images[level-1]})`;
       div.style.backgroundPosition = `-${x}px -${y}px`;
@@ -107,33 +128,36 @@ function render(){
       div.style.background="#fff";
     }
 
-    div.onclick=()=>move(i);
+    div.onclick = ()=>move(i);
     board.appendChild(div);
   });
 }
 
 function move(i){
-  let empty = tiles.indexOf(3);
+  let empty = tiles.indexOf(8);
 
-  let valid=[empty-1,empty+1,empty-2,empty+2];
+  let valid = [
+    empty-1, empty+1,
+    empty-3, empty+3
+  ];
 
   if(valid.includes(i)){
-    [tiles[i],tiles[empty]]=[tiles[empty],tiles[i]];
+    [tiles[i], tiles[empty]] = [tiles[empty], tiles[i]];
     render();
     checkWin();
   }
 }
 
 function checkWin(){
-  if(tiles.toString()=="0,1,2,3"){
+  if(tiles.toString() == "0,1,2,3,4,5,6,7,8"){
     clearInterval(timer);
 
     setTimeout(()=>{
-      if(level<4){
+      if(level < 4){
         alert("Level "+level+" Complete!");
         level++;
         loadLevel();
-      }else{
+      } else {
         alert("🎉 Game Completed!");
         location.reload();
       }
