@@ -1,4 +1,4 @@
-    <!DOCTYPE html><html>
+<!DOCTYPE html><html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Concrete Puzzle</title><style>
@@ -10,7 +10,6 @@ body{
   text-align:center;
 }
 
-/* HOME */
 #home{
   height:100vh;
   display:flex;
@@ -19,33 +18,22 @@ body{
   align-items:center;
 }
 
-.title{
-  font-size:50px;
-  color:#d4ff00;
-}
-
-.owner{
-  margin-top:10px;
-  color:#aaa;
-}
+.title{font-size:48px;color:#d4ff00;}
+.owner{color:#aaa;}
 
 #startBtn{
-  margin-top:30px;
   padding:20px 80px;
-  font-size:24px;
+  font-size:22px;
   background:#d4ff00;
   border:3px solid black;
-  cursor:pointer;
+  margin-top:20px;
 }
 
-/* GAME */
-#game{
-  display:none;
-}
+/* board */
+#game{display:none;}
 
 #board{
   display:grid;
-  grid-template-columns:repeat(4,90px);
   gap:6px;
   justify-content:center;
   margin-top:20px;
@@ -55,78 +43,69 @@ body{
   width:90px;
   height:90px;
   border:2px solid white;
-  background-size:360px 270px;
-}
-
-#score{
-  color:#d4ff00;
 }
 </style></head><body><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
   <div class="owner">Owner: Jayanta (JD)</div>
   <button id="startBtn" onclick="startGame()">START</button>
 </div><div id="game">
-  <h2>Level 1</h2>
+  <h2 id="lvl">Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
-  <div id="score">Best: 0s</div>
   <div id="board"></div>
 </div><script>
-// =====================
-// 🔊 FIXED SOUND SYSTEM
-// =====================
+// 🔊 SOUND FIX (no stop)
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playClick(){
+function beep(freq,time){
   let o = audioCtx.createOscillator();
   let g = audioCtx.createGain();
 
   o.connect(g);
   g.connect(audioCtx.destination);
 
-  o.type = "square";
-  o.frequency.value = 500;
-
+  o.frequency.value = freq;
   o.start();
-  g.gain.setValueAtTime(1, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
-  o.stop(audioCtx.currentTime + 0.1);
+
+  g.gain.setValueAtTime(1,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+time);
+
+  o.stop(audioCtx.currentTime+time);
 }
 
-function playWin(){
-  let o = audioCtx.createOscillator();
-  let g = audioCtx.createGain();
-
-  o.connect(g);
-  g.connect(audioCtx.destination);
-
-  o.type = "triangle";
-  o.frequency.value = 800;
-
-  o.start();
-  g.gain.setValueAtTime(1, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-  o.stop(audioCtx.currentTime + 0.4);
-}
-
-// unlock audio once
-document.body.addEventListener("click", ()=>{
-  if(audioCtx.state === "suspended"){
-    audioCtx.resume();
-  }
+document.body.addEventListener("click",()=>{
+  if(audioCtx.state==="suspended") audioCtx.resume();
 },{once:true});
 
-// =====================
-// GAME LOGIC
-// =====================
+// ================= GAME =================
+let level=1;
 let tiles=[];
 let time=0;
 let timer;
-let image="img1.jpg";
+let sizes=[4,6,8,12]; // level sizes
 
 function startGame(){
   document.getElementById("home").style.display="none";
   document.getElementById("game").style.display="block";
-  loadGame();
+  loadLevel();
+}
+
+function loadLevel(){
+  let total=sizes[level-1];
+
+  document.getElementById("lvl").innerText="Level "+level;
+
+  tiles=[];
+  for(let i=0;i<total;i++) tiles.push(i);
+
+  tiles.sort(()=>Math.random()-0.5);
+
+  // grid layout auto
+  let cols=Math.ceil(Math.sqrt(total));
+  document.getElementById("board").style.gridTemplateColumns=
+    `repeat(${cols},90px)`;
+
+  startTimer();
+  render();
 }
 
 function startTimer(){
@@ -138,29 +117,18 @@ function startTimer(){
   },1000);
 }
 
-function loadGame(){
-  tiles=[];
-  for(let i=0;i<12;i++) tiles.push(i);
-
-  tiles.sort(()=>Math.random()-0.5);
-  startTimer();
-  render();
-}
-
 function render(){
   let board=document.getElementById("board");
   board.innerHTML="";
+
+  let total=sizes[level-1];
 
   tiles.forEach((val,i)=>{
     let div=document.createElement("div");
     div.className="tile";
 
-    if(val<10){
-      let x=(val%4)*90;
-      let y=Math.floor(val/4)*90;
-
-      div.style.backgroundImage=`url(${image})`;
-      div.style.backgroundPosition=`-${x}px -${y}px`;
+    if(val<total-2){
+      div.style.background="#555";
     }else{
       div.style.background="#000";
     }
@@ -171,13 +139,14 @@ function render(){
 }
 
 function move(i){
-  let e1=tiles.indexOf(10);
-  let e2=tiles.indexOf(11);
+  let total=sizes[level-1];
+  let e1=tiles.indexOf(total-2);
+  let e2=tiles.indexOf(total-1);
 
   let valid=[e1-1,e1+1,e1-4,e1+4,e2-1,e2+1,e2-4,e2+4];
 
   if(valid.includes(i)){
-    playClick();
+    beep(500,0.1);
 
     if(Math.abs(i-e1)<=4){
       [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
@@ -191,24 +160,24 @@ function move(i){
 }
 
 function checkWin(){
-  if(tiles.slice(0,10).toString()=="0,1,2,3,4,5,6,7,8,9"){
+  let total=sizes[level-1];
+
+  if(tiles.slice(0,total-2).toString() ==
+     [...Array(total-2).keys()].toString()){
+
     clearInterval(timer);
-
-    playWin();
-
-    let best=localStorage.getItem("best")||9999;
-    if(time<best){
-      localStorage.setItem("best",time);
-    }
-
-    document.getElementById("score").innerText=
-      "Best: "+localStorage.getItem("best")+"s";
+    beep(900,0.4);
 
     setTimeout(()=>{
-      alert("🎉 Completed!");
-      location.reload();
+      if(level<4){
+        level++;
+        loadLevel();
+      }else{
+        alert("🎉 Game Completed!");
+        location.reload();
+      }
     },300);
   }
 }
 </script></body>
-    </html>
+</html>
