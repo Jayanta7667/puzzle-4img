@@ -19,6 +19,7 @@ body{
 }
 
 .title{font-size:45px;color:#d4ff00;}
+
 #startBtn{
   padding:20px 70px;
   font-size:22px;
@@ -86,6 +87,7 @@ function loadLevel(){
 
  tiles=[];
  for(let i=0;i<total;i++) tiles.push(i);
+
  tiles.sort(()=>Math.random()-0.5);
 
  let cols=Math.ceil(Math.sqrt(total));
@@ -110,14 +112,16 @@ function render(){
  board.innerHTML="";
 
  let total=sizes[level-1];
+ let emptyIndex = total-1;
 
  tiles.forEach((val,i)=>{
   let div=document.createElement("div");
   div.className="tile";
 
-  if(val<total-2){
-    let x=(val%3)*100;
-    let y=Math.floor(val/3)*100;
+  if(val !== emptyIndex){
+    let cols=Math.ceil(Math.sqrt(total));
+    let x=(val % cols)*100;
+    let y=Math.floor(val / cols)*100;
 
     div.style.backgroundImage=`url(${images[level-1]})`;
     div.style.backgroundPosition=`-${x}px -${y}px`;
@@ -132,20 +136,18 @@ function render(){
 
 function move(i){
  let total=sizes[level-1];
- let e1=tiles.indexOf(total-2);
- let e2=tiles.indexOf(total-1);
+ let empty=tiles.indexOf(total-1);
 
- let valid=[e1-1,e1+1,e1-3,e1+3,e2-1,e2+1,e2-3,e2+3];
+ let cols=Math.ceil(Math.sqrt(total));
+
+ let valid=[
+   empty-1, empty+1,
+   empty-cols, empty+cols
+ ];
 
  if(valid.includes(i)){
   sound(500,0.1);
-
-  if(Math.abs(i-e1)<=3){
-   [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
-  }else{
-   [tiles[i],tiles[e2]]=[tiles[e2],tiles[i]];
-  }
-
+  [tiles[i],tiles[empty]]=[tiles[empty],tiles[i]];
   render();
   checkWin();
  }
@@ -154,9 +156,15 @@ function move(i){
 function checkWin(){
  let total=sizes[level-1];
 
- if(tiles.slice(0,total-2).toString() ==
- [...Array(total-2).keys()].toString()){
+ let win=true;
+ for(let i=0;i<total;i++){
+  if(tiles[i]!==i){
+    win=false;
+    break;
+  }
+ }
 
+ if(win){
   clearInterval(timer);
   sound(900,0.4);
 
@@ -165,7 +173,7 @@ function checkWin(){
     level++;
     loadLevel();
    }else{
-    alert("🎉 Completed!");
+    alert("🎉 Game Completed!");
     location.reload();
    }
   },300);
