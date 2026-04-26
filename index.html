@@ -4,10 +4,10 @@
 <title>Concrete Puzzle</title><style>
 body{
   margin:0;
-  font-family:Arial;
   background:#0d0d0d;
   color:white;
   text-align:center;
+  font-family:Arial;
 }
 
 #home{
@@ -18,166 +18,158 @@ body{
   align-items:center;
 }
 
-.title{font-size:48px;color:#d4ff00;}
-.owner{color:#aaa;}
-
+.title{font-size:45px;color:#d4ff00;}
 #startBtn{
-  padding:20px 80px;
+  padding:20px 70px;
   font-size:22px;
   background:#d4ff00;
   border:3px solid black;
-  margin-top:20px;
 }
 
-/* board */
 #game{display:none;}
 
 #board{
   display:grid;
-  gap:6px;
+  gap:4px;
   justify-content:center;
   margin-top:20px;
 }
 
 .tile{
-  width:90px;
-  height:90px;
-  border:2px solid white;
+  width:100px;
+  height:100px;
+  border:1px solid #333;
+  background-size:300px 300px;
 }
 </style></head><body><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
-  <div class="owner">Owner: Jayanta (JD)</div>
+  <p>Owner: Jayanta (JD)</p>
   <button id="startBtn" onclick="startGame()">START</button>
 </div><div id="game">
-  <h2 id="lvl">Level 1</h2>
+  <h2 id="lvl"></h2>
   <h3>Time: <span id="time">0</span>s</h3>
   <div id="board"></div>
 </div><script>
-// 🔊 SOUND FIX (no stop)
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function beep(freq,time){
-  let o = audioCtx.createOscillator();
-  let g = audioCtx.createGain();
-
-  o.connect(g);
-  g.connect(audioCtx.destination);
-
-  o.frequency.value = freq;
+// 🔊 SOUND
+let ctx=new (window.AudioContext||window.webkitAudioContext)();
+function sound(f,t){
+  let o=ctx.createOscillator();
+  let g=ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.frequency.value=f;
   o.start();
-
-  g.gain.setValueAtTime(1,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+time);
-
-  o.stop(audioCtx.currentTime+time);
+  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t);
+  o.stop(ctx.currentTime+t);
 }
 
 document.body.addEventListener("click",()=>{
-  if(audioCtx.state==="suspended") audioCtx.resume();
+ if(ctx.state==="suspended") ctx.resume();
 },{once:true});
 
-// ================= GAME =================
+// ===== GAME =====
 let level=1;
+let sizes=[4,6,8,12];
 let tiles=[];
-let time=0;
-let timer;
-let sizes=[4,6,8,12]; // level sizes
+let timer,time=0;
+
+let images=["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
 
 function startGame(){
-  document.getElementById("home").style.display="none";
-  document.getElementById("game").style.display="block";
-  loadLevel();
+ document.getElementById("home").style.display="none";
+ document.getElementById("game").style.display="block";
+ loadLevel();
 }
 
 function loadLevel(){
-  let total=sizes[level-1];
+ let total=sizes[level-1];
+ document.getElementById("lvl").innerText="Level "+level;
 
-  document.getElementById("lvl").innerText="Level "+level;
+ tiles=[];
+ for(let i=0;i<total;i++) tiles.push(i);
+ tiles.sort(()=>Math.random()-0.5);
 
-  tiles=[];
-  for(let i=0;i<total;i++) tiles.push(i);
+ let cols=Math.ceil(Math.sqrt(total));
+ document.getElementById("board").style.gridTemplateColumns=
+ `repeat(${cols},100px)`;
 
-  tiles.sort(()=>Math.random()-0.5);
-
-  // grid layout auto
-  let cols=Math.ceil(Math.sqrt(total));
-  document.getElementById("board").style.gridTemplateColumns=
-    `repeat(${cols},90px)`;
-
-  startTimer();
-  render();
+ startTimer();
+ render();
 }
 
 function startTimer(){
-  clearInterval(timer);
-  time=0;
-  timer=setInterval(()=>{
-    time++;
-    document.getElementById("time").innerText=time;
-  },1000);
+ clearInterval(timer);
+ time=0;
+ timer=setInterval(()=>{
+  time++;
+  document.getElementById("time").innerText=time;
+ },1000);
 }
 
 function render(){
-  let board=document.getElementById("board");
-  board.innerHTML="";
+ let board=document.getElementById("board");
+ board.innerHTML="";
 
-  let total=sizes[level-1];
+ let total=sizes[level-1];
 
-  tiles.forEach((val,i)=>{
-    let div=document.createElement("div");
-    div.className="tile";
+ tiles.forEach((val,i)=>{
+  let div=document.createElement("div");
+  div.className="tile";
 
-    if(val<total-2){
-      div.style.background="#555";
-    }else{
-      div.style.background="#000";
-    }
+  if(val<total-2){
+    let x=(val%3)*100;
+    let y=Math.floor(val/3)*100;
 
-    div.onclick=()=>move(i);
-    board.appendChild(div);
-  });
+    div.style.backgroundImage=`url(${images[level-1]})`;
+    div.style.backgroundPosition=`-${x}px -${y}px`;
+  }else{
+    div.style.background="#000";
+  }
+
+  div.onclick=()=>move(i);
+  board.appendChild(div);
+ });
 }
 
 function move(i){
-  let total=sizes[level-1];
-  let e1=tiles.indexOf(total-2);
-  let e2=tiles.indexOf(total-1);
+ let total=sizes[level-1];
+ let e1=tiles.indexOf(total-2);
+ let e2=tiles.indexOf(total-1);
 
-  let valid=[e1-1,e1+1,e1-4,e1+4,e2-1,e2+1,e2-4,e2+4];
+ let valid=[e1-1,e1+1,e1-3,e1+3,e2-1,e2+1,e2-3,e2+3];
 
-  if(valid.includes(i)){
-    beep(500,0.1);
+ if(valid.includes(i)){
+  sound(500,0.1);
 
-    if(Math.abs(i-e1)<=4){
-      [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
-    }else{
-      [tiles[i],tiles[e2]]=[tiles[e2],tiles[i]];
-    }
-
-    render();
-    checkWin();
+  if(Math.abs(i-e1)<=3){
+   [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
+  }else{
+   [tiles[i],tiles[e2]]=[tiles[e2],tiles[i]];
   }
+
+  render();
+  checkWin();
+ }
 }
 
 function checkWin(){
-  let total=sizes[level-1];
+ let total=sizes[level-1];
 
-  if(tiles.slice(0,total-2).toString() ==
-     [...Array(total-2).keys()].toString()){
+ if(tiles.slice(0,total-2).toString() ==
+ [...Array(total-2).keys()].toString()){
 
-    clearInterval(timer);
-    beep(900,0.4);
+  clearInterval(timer);
+  sound(900,0.4);
 
-    setTimeout(()=>{
-      if(level<4){
-        level++;
-        loadLevel();
-      }else{
-        alert("🎉 Game Completed!");
-        location.reload();
-      }
-    },300);
-  }
+  setTimeout(()=>{
+   if(level<4){
+    level++;
+    loadLevel();
+   }else{
+    alert("🎉 Completed!");
+    location.reload();
+   }
+  },300);
+ }
 }
 </script></body>
 </html>
