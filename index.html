@@ -5,11 +5,12 @@
 body{
   margin:0;
   font-family:Arial;
-  background:#ececec;
+  background:#0d0d0d;
+  color:white;
   text-align:center;
 }
 
-/* HOME SCREEN */
+/* HOME */
 #home{
   height:100vh;
   display:flex;
@@ -19,24 +20,23 @@ body{
 }
 
 .title{
-  font-size:50px;
-  font-weight:bold;
-  letter-spacing:2px;
+  font-size:48px;
+  color:#d4ff00;
+  text-shadow:0 0 20px #d4ff00;
 }
 
-.sub{
-  font-size:14px;
-  color:#666;
-  margin-bottom:20px;
+.owner{
+  margin-top:10px;
+  color:#aaa;
 }
 
 #startBtn{
-  padding:22px 70px;
+  margin-top:30px;
+  padding:20px 70px;
   font-size:22px;
   background:#d4ff00;
   border:3px solid black;
   cursor:pointer;
-  box-shadow:6px 6px 0px black;
 }
 
 /* GAME */
@@ -46,40 +46,43 @@ body{
 
 #board{
   display:grid;
-  grid-template-columns:repeat(3,130px);
+  grid-template-columns:repeat(5,90px);
   gap:6px;
   justify-content:center;
   margin-top:20px;
 }
 
 .tile{
-  width:130px;
-  height:130px;
-  border:2px solid black;
-  background-size:390px 390px;
+  width:90px;
+  height:90px;
+  border:2px solid white;
+  background-size:450px 180px;
 }
 
-/* INFO */
-h2{
+/* SCORE */
+#score{
   margin-top:10px;
+  color:#d4ff00;
 }
-</style></head><body><!-- HOME --><div id="home">
+</style></head><body><div id="home">
   <div class="title">CONCRETE PUZZLE</div>
-  <div class="sub">3x3 Sliding Challenge</div>
-  <button id="startBtn" onclick="startGame()">START GAME</button>
-</div><!-- GAME --><div id="game">
+  <div class="owner">Owner: Jayanta (JD)</div>
+  <button id="startBtn" onclick="startGame()">START</button>
+</div><div id="game">
   <h2 id="levelText">Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
+  <div id="score">Best: 0s</div>
   <div id="board"></div>
-</div><script>
-let level = 1;
-let size = 3;
-let tiles = [];
-let time = 0;
+</div><audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
+<script>
+let level=1;
+let tiles=[];
+let time=0;
 let timer;
 
-// 4 images use korbe
-let images = ["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
+let images=["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
 
 function startGame(){
   document.getElementById("home").style.display="none";
@@ -89,21 +92,18 @@ function startGame(){
 
 function startTimer(){
   clearInterval(timer);
-  time = 0;
-  document.getElementById("time").innerText = 0;
-
-  timer = setInterval(()=>{
+  time=0;
+  timer=setInterval(()=>{
     time++;
-    document.getElementById("time").innerText = time;
+    document.getElementById("time").innerText=time;
   },1000);
 }
 
 function loadLevel(){
-  document.getElementById("levelText").innerText = "Level " + level;
+  document.getElementById("levelText").innerText="Level "+level;
 
-  tiles = [];
-  for(let i=0;i<9;i++) tiles.push(i);
-
+  tiles=[];
+  for(let i=0;i<10;i++) tiles.push(i);
   tiles.sort(()=>Math.random()-0.5);
 
   startTimer();
@@ -111,58 +111,83 @@ function loadLevel(){
 }
 
 function render(){
-  let board = document.getElementById("board");
-  board.innerHTML = "";
+  let board=document.getElementById("board");
+  board.innerHTML="";
 
   tiles.forEach((val,i)=>{
-    let div = document.createElement("div");
+    let div=document.createElement("div");
     div.className="tile";
 
-    if(val !== 8){
-      let x = (val % 3)*130;
-      let y = Math.floor(val/3)*130;
-
-      div.style.backgroundImage = `url(${images[level-1]})`;
-      div.style.backgroundPosition = `-${x}px -${y}px`;
-    } else {
-      div.style.background="#fff";
+    if(val<8){
+      let x=(val%5)*90;
+      let y=Math.floor(val/5)*90;
+      div.style.backgroundImage=`url(${images[level-1]})`;
+      div.style.backgroundPosition=`-${x}px -${y}px`;
+    }else{
+      div.style.background="#000";
     }
 
-    div.onclick = ()=>move(i);
+    div.onclick=()=>move(i);
     board.appendChild(div);
   });
 }
 
 function move(i){
-  let empty = tiles.indexOf(8);
+  let empty1=tiles.indexOf(8);
+  let empty2=tiles.indexOf(9);
 
-  let valid = [
-    empty-1, empty+1,
-    empty-3, empty+3
-  ];
+  let valid=[empty1-1,empty1+1,empty1-5,empty1+5,
+             empty2-1,empty2+1,empty2-5,empty2+5];
 
   if(valid.includes(i)){
-    [tiles[i], tiles[empty]] = [tiles[empty], tiles[i]];
+    document.getElementById("clickSound").play();
+
+    if(Math.abs(i-empty1)<=5){
+      [tiles[i],tiles[empty1]]=[tiles[empty1],tiles[i]];
+    }else{
+      [tiles[i],tiles[empty2]]=[tiles[empty2],tiles[i]];
+    }
+
     render();
     checkWin();
   }
 }
 
 function checkWin(){
-  if(tiles.toString() == "0,1,2,3,4,5,6,7,8"){
+  if(tiles.slice(0,8).toString()=="0,1,2,3,4,5,6,7"){
     clearInterval(timer);
+    document.getElementById("winSound").play();
+
+    // save best score
+    let best = localStorage.getItem("best") || 9999;
+    if(time < best){
+      localStorage.setItem("best", time);
+    }
+
+    document.getElementById("score").innerText =
+      "Best: " + localStorage.getItem("best") + "s";
 
     setTimeout(()=>{
-      if(level < 4){
-        alert("Level "+level+" Complete!");
+      if(level<4){
         level++;
         loadLevel();
-      } else {
+      }else{
         alert("🎉 Game Completed!");
         location.reload();
       }
     },300);
   }
 }
+
+/* swipe support */
+let startX=0;
+document.addEventListener("touchstart",e=>{
+  startX=e.touches[0].clientX;
+});
+
+document.addEventListener("touchend",e=>{
+  let endX=e.changedTouches[0].clientX;
+  if(endX-startX>50) console.log("swipe right");
+});
 </script></body>
 </html>
