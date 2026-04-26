@@ -22,7 +22,6 @@ body{
 .title{
   font-size:48px;
   color:#d4ff00;
-  text-shadow:0 0 20px #d4ff00;
 }
 
 .owner{
@@ -46,7 +45,7 @@ body{
 
 #board{
   display:grid;
-  grid-template-columns:repeat(5,90px);
+  grid-template-columns:repeat(4,90px);
   gap:6px;
   justify-content:center;
   margin-top:20px;
@@ -56,10 +55,10 @@ body{
   width:90px;
   height:90px;
   border:2px solid white;
-  background-size:450px 180px;
+  background-size:360px 270px;
 }
 
-/* SCORE */
+/* score */
 #score{
   margin-top:10px;
   color:#d4ff00;
@@ -69,7 +68,7 @@ body{
   <div class="owner">Owner: Jayanta (JD)</div>
   <button id="startBtn" onclick="startGame()">START</button>
 </div><div id="game">
-  <h2 id="levelText">Level 1</h2>
+  <h2>Level 1</h2>
   <h3>Time: <span id="time">0</span>s</h3>
   <div id="score">Best: 0s</div>
   <div id="board"></div>
@@ -77,17 +76,23 @@ body{
 <audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
 
 <script>
-let level=1;
 let tiles=[];
 let time=0;
 let timer;
 
 let images=["img1.jpg","img2.jpg","img3.jpg","img4.jpg"];
+let currentImage=0;
+
+/* unlock sound */
+document.body.addEventListener("click", ()=>{
+  let a=document.getElementById("clickSound");
+  a.play().then(()=>a.pause());
+},{once:true});
 
 function startGame(){
   document.getElementById("home").style.display="none";
   document.getElementById("game").style.display="block";
-  loadLevel();
+  loadGame();
 }
 
 function startTimer(){
@@ -99,13 +104,11 @@ function startTimer(){
   },1000);
 }
 
-function loadLevel(){
-  document.getElementById("levelText").innerText="Level "+level;
-
+function loadGame(){
   tiles=[];
-  for(let i=0;i<10;i++) tiles.push(i);
-  tiles.sort(()=>Math.random()-0.5);
+  for(let i=0;i<12;i++) tiles.push(i);
 
+  tiles.sort(()=>Math.random()-0.5);
   startTimer();
   render();
 }
@@ -118,10 +121,11 @@ function render(){
     let div=document.createElement("div");
     div.className="tile";
 
-    if(val<8){
-      let x=(val%5)*90;
-      let y=Math.floor(val/5)*90;
-      div.style.backgroundImage=`url(${images[level-1]})`;
+    if(val<10){ // 10 pieces
+      let x=(val%4)*90;
+      let y=Math.floor(val/4)*90;
+
+      div.style.backgroundImage=`url(${images[currentImage]})`;
       div.style.backgroundPosition=`-${x}px -${y}px`;
     }else{
       div.style.background="#000";
@@ -133,19 +137,20 @@ function render(){
 }
 
 function move(i){
-  let empty1=tiles.indexOf(8);
-  let empty2=tiles.indexOf(9);
+  let e1=tiles.indexOf(10);
+  let e2=tiles.indexOf(11);
 
-  let valid=[empty1-1,empty1+1,empty1-5,empty1+5,
-             empty2-1,empty2+1,empty2-5,empty2+5];
+  let valid=[e1-1,e1+1,e1-4,e1+4,e2-1,e2+1,e2-4,e2+4];
 
   if(valid.includes(i)){
-    document.getElementById("clickSound").play();
+    let s=document.getElementById("clickSound");
+    s.currentTime=0;
+    s.play().catch(()=>{});
 
-    if(Math.abs(i-empty1)<=5){
-      [tiles[i],tiles[empty1]]=[tiles[empty1],tiles[i]];
+    if(Math.abs(i-e1)<=4){
+      [tiles[i],tiles[e1]]=[tiles[e1],tiles[i]];
     }else{
-      [tiles[i],tiles[empty2]]=[tiles[empty2],tiles[i]];
+      [tiles[i],tiles[e2]]=[tiles[e2],tiles[i]];
     }
 
     render();
@@ -154,40 +159,26 @@ function move(i){
 }
 
 function checkWin(){
-  if(tiles.slice(0,8).toString()=="0,1,2,3,4,5,6,7"){
+  if(tiles.slice(0,10).toString()=="0,1,2,3,4,5,6,7,8,9"){
     clearInterval(timer);
-    document.getElementById("winSound").play();
 
-    // save best score
-    let best = localStorage.getItem("best") || 9999;
-    if(time < best){
-      localStorage.setItem("best", time);
+    let w=document.getElementById("winSound");
+    w.currentTime=0;
+    w.play().catch(()=>{});
+
+    let best=localStorage.getItem("best")||9999;
+    if(time<best){
+      localStorage.setItem("best",time);
     }
 
-    document.getElementById("score").innerText =
-      "Best: " + localStorage.getItem("best") + "s";
+    document.getElementById("score").innerText=
+      "Best: "+localStorage.getItem("best")+"s";
 
     setTimeout(()=>{
-      if(level<4){
-        level++;
-        loadLevel();
-      }else{
-        alert("🎉 Game Completed!");
-        location.reload();
-      }
+      alert("🎉 Completed!");
+      location.reload();
     },300);
   }
 }
-
-/* swipe support */
-let startX=0;
-document.addEventListener("touchstart",e=>{
-  startX=e.touches[0].clientX;
-});
-
-document.addEventListener("touchend",e=>{
-  let endX=e.changedTouches[0].clientX;
-  if(endX-startX>50) console.log("swipe right");
-});
 </script></body>
 </html>
