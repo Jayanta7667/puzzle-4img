@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>4 Image Puzzle</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(2, 150px);
+      gap: 5px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .tile {
+      width: 150px;
+      height: 150px;
+      border: 2px solid black;
+      background-size: 300px 300px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Puzzle Game (2x2)</h2>
+
+<div id="board"></div>
+
+<script>
+let size = 2;
+let tiles = [0,1,2,3];
+
+let image = "img1.jpg";
+
+tiles.sort(() => Math.random() - 0.5);
+
+function render() {
+  let board = document.getElementById("board");
+  board.innerHTML = "";
+
+  tiles.forEach((val, i) => {
+    let div = document.createElement("div");
+    div.className = "tile";
+
+    if (val !== size*size-1) {
+      let x = (val % size) * 150;
+      let y = Math.floor(val / size) * 150;
+      div.style.backgroundImage = `url(${image})`;
+      div.style.backgroundPosition = `-${x}px -${y}px`;
+    } else {
+      div.style.background = "#fff";
+    }
+
+    div.onclick = () => move(i);
+    board.appendChild(div);
+  });
+}
+
+function move(i) {
+  let empty = tiles.indexOf(size*size-1);
+
+  let valid = [
+    empty-1,
+    empty+1,
+    empty-size,
+    empty+size
+  ];
+
+  if (valid.includes(i)) {
+    [tiles[i], tiles[empty]] = [tiles[empty], tiles[i]];
+    render();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
